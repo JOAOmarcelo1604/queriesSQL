@@ -1,0 +1,27 @@
+SELECT
+    pc.NUMPED,
+    pc.DATA                                               AS DATA_PED,
+    MIN(c.CLIENTE)                                        AS CLIENTE_NOME,
+    MIN(p.PRACA)                                          AS PRACA_NOME,
+    pc.CODCLI,
+    COUNT(DISTINCT CASE WHEN pr.CODSEC = 101 AND pr.CODEPTO = 1 THEN pi.CODPROD END) AS PRODUTOS_FERRO,
+    r.ID             AS ROM_ID,
+    r.CODIGO         AS ROM_CODIGO,
+    r.STATUS         AS ROM_STATUS,
+    r.NOME_SEPARADOR AS ROM_SEP
+FROM PCPEDC pc
+LEFT JOIN PCCLIENT c ON c.CODCLI = pc.CODCLI
+LEFT JOIN PCPRACA  p ON p.CODPRACA = pc.CODPRACA
+JOIN PCPEDI   pi ON pi.NUMPED = pc.NUMPED
+JOIN PCPRODUT pr ON pr.CODPROD = pi.CODPROD
+                 AND pr.CODSEC = 101 AND pr.CODEPTO = 1
+LEFT JOIN PORTAL_ROMANEIO r
+       ON r.NUMPED_RETIRADA = pc.NUMPED
+      AND r.TIPO = 'RET'
+WHERE pc.ORIGEMPED = 'R'
+  AND pc.DATA >= TO_DATE('05/05/2026', 'DD/MM/YYYY')
+  AND NVL(pi.QT, 0) > 0
+  AND pc.POSICAO != 'F'
+GROUP BY pc.NUMPED, pc.DATA, pc.CODCLI,
+         r.ID, r.CODIGO, r.STATUS, r.NOME_SEPARADOR
+ORDER BY pc.DATA DESC, pc.NUMPED DESC
